@@ -1,11 +1,17 @@
 ;~ SetWorkingDir %A_MyDocuments%\..\Dropbox\Apps\Day One\Journal.dayone\entries
 ;~ MsgBox %A_WorkingDir%
 
-FileRead, f, iTunes Music Library.xml
-f := RegExReplace(f,"<!DOCTYPE.*>[\r\n]+")
-f := RegExReplace(f,"<plist version.*>","<root>")
-f := RegExReplace(f,"</plist>","</root>")
-y := new XML(f)
+loop, files, *.doentry
+{
+	FileRead, f, % A_LoopFileName
+	f := RegExReplace(f,"<.xml.*?>[\r\n]+")
+	f := RegExReplace(f,"<!DOCTYPE.*?>[\r\n]+")
+	f := RegExReplace(f,"<plist version.*?>","<root>")
+	f := RegExReplace(f,"</plist>","</root>")
+	f := RegExReplace(f,"\n","`r`n")
+	y := new XML(f)
+}
+ExitApp
 
 plib := y.selectSingleNode("/root/dict")
 trNode := getKey(plib,"Tracks")
