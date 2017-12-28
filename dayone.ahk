@@ -4,6 +4,12 @@
 loop, files, *.doentry
 {
 	plib := readFile(A_LoopFileName).selectSingleNode("/root/dict")
+	cdate := getKey(plib,"Creation Date")
+	entry := getKey(plib,"Entry Text")
+	ploc := getKey(plib,"Location")
+	lat := getKey(ploc,"Latitude")
+	lon := getKey(ploc,"Longitude")
+	MsgBox % lon
 }
 ExitApp
 
