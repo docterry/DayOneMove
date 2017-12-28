@@ -3,17 +3,20 @@
 
 loop, files, *.doentry
 {
-	FileRead, f, % A_LoopFileName
-	f := RegExReplace(f,"<.xml.*?>[\r\n]+")
-	f := RegExReplace(f,"<!DOCTYPE.*?>[\r\n]+")
-	f := RegExReplace(f,"<plist version.*?>","<root>")
-	f := RegExReplace(f,"</plist>","</root>")
-	f := RegExReplace(f,"\n","`r`n")
-	y := new XML(f)
+	plib := readFile(A_LoopFileName).selectSingleNode("/root/dict")
 }
 ExitApp
 
-plib := y.selectSingleNode("/root/dict")
+readfile(fn) {
+	FileRead, txt, % fn
+	txt := RegExReplace(txt,"<.xml.*?>[\r\n]+")
+	txt := RegExReplace(txt,"<!DOCTYPE.*?>[\r\n]+")
+	txt := RegExReplace(txt,"<plist version.*?>","<root>")
+	txt := RegExReplace(txt,"</plist>","</root>")
+	txt := RegExReplace(txt,"\n","`r`n")
+	return new XML(txt)
+}
+
 trNode := getKey(plib,"Tracks")
 plNode := getKey(plib,"Playlists")
 
