@@ -1,4 +1,4 @@
-SetWorkingDir %A_MyDocuments%\..\Dropbox\Apps\Day One\Journal.dayone\entries
+;~ SetWorkingDir %A_MyDocuments%\..\Dropbox\Apps\Day One\Journal.dayone\entries
 ;~ MsgBox %A_WorkingDir%
 
 FileRead, f, iTunes Music Library.xml
