@@ -1,16 +1,62 @@
-;~ SetWorkingDir %A_MyDocuments%\..\Dropbox\Apps\Day One\Journal.dayone\entries
-;~ MsgBox %A_WorkingDir%
+SetWorkingDir %A_MyDocuments%\..\Dropbox\Apps\Day One\Journal.dayone\entries
+
+y := new XML("<root/>")
 
 loop, files, *.doentry
 {
+	idx := A_Index
 	plib := readFile(A_LoopFileName).selectSingleNode("/root/dict")
-	cdate := getKey(plib,"Creation Date")
-	entry := getKey(plib,"Entry Text")
+	
+	pdate := getKey(plib,"Creation Date")
+		pdate := RegExReplace(pdate, "[TZ\-\:]")
+		pdate += -8, H
+		FormatTime, cdate, % pdate, ddd, dd MMM yyyy HH:mm:ss
+	
+	pent := getKey(plib,"Entry Text")
+		t := instr(pent, "`n")
+		if (t between 1 and 80) 
+		{
+			title := SubStr(pent,1,t)
+			body := SubStr(pent,t+1)
+		} else {
+			title := 
+			body := pent
+		}
+		body := RegExReplace(body,"`n","</p><p>")
 	ploc := getKey(plib,"Location")
-	lat := getKey(ploc,"Latitude")
-	lon := getKey(ploc,"Longitude")
-	MsgBox % lon
+		lat := getKey(ploc,"Latitude")
+		lon := getKey(ploc,"Longitude")
+	
+	y.addElement("item","root",{id:idx})
+		y.addElement("title","/root/item[@id='" idx "']",title)
+		y.addElement("pubDate","/root/item[@id='" idx "']",cdate)
+		y.addElement("content___encoded","/root/item[@id='" idx "']","<p>" body "</p>")
 }
+y.save("import.xml")
+
+FileRead, yTxt, import.xml
+yTxt := RegExReplace(yTxt, "<item id.*?>","<item>")
+yTxt := RegExReplace(yTxt, "___",":")
+yTxt := RegExReplace(yTxt, "&lt;","<")
+yTxt := RegExReplace(yTxt, "&gt;",">")
+
+yT1 =
+(
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0"
+	xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:wp="http://wordpress.org/export/1.2/"
+>
+)
+
+yTxt := yT1 . yTxt . "</rss>"
+
+FileDelete, import.xml
+FileAppend, % yTxt, import.xml
+
 ExitApp
 
 readfile(fn) {
@@ -21,40 +67,6 @@ readfile(fn) {
 	txt := RegExReplace(txt,"</plist>","</root>")
 	txt := RegExReplace(txt,"\n","`r`n")
 	return new XML(txt)
-}
-
-trNode := getKey(plib,"Tracks")
-plNode := getKey(plib,"Playlists")
-
-Loop, % (tot := (pl := plNode.selectNodes("dict")).Length) {
-	k := pl.item(A_Index-1)
-	v := readKeys(k)
-	if (v.Name="Library") {
-		continue
-	}
-	if (v["Distinguished Kind"]) {
-		continue
-	}
-	pl_Name := v.Name
-	
-	pli := getKey(k,"Playlist Items")
-	Loop, % (li := pli.selectNodes("dict")).Length {
-		k := li.item(A_Index-1)
-		id := getKey(k,"Track ID")
-		tra := getTrack(id)
-		fname := tra.Location
-		fname := RegExReplace(fname,"file://.*music/","#EXTURL:file:///media/Music/")
-		MsgBox,,% pl_Name, % fname
-	}
-}
-
-ExitApp
-
-getTrack(id) {
-	global trNode
-	v := getKey(trNode,id)
-	res := readKeys(v)
-	return res
 }
 
 getKey(dict,lbl) {
